@@ -24,6 +24,7 @@ this.nDesignVariables = 2;
 this.nMin = -5.12;
 this.nMax = 5.12;
 this.population = [];
+this.currentTeacher = {};
 this.bestSolution = {
     cost: Number.POSITIVE_INFINITY
 };
@@ -41,7 +42,7 @@ this.init = function() {
             },
             cost: rndCst
         });
-    
+
         if (rndCst < bestSolution.cost) {
             bestSolution = this.population[i];
         };
@@ -69,18 +70,58 @@ this.evaluate = function(element, newX, newY) {
 };
 
 this.TLBO = function() {
+    this.teacher();
+    this.student();
+};
+
+this.appointTeacher = function() {
+    this.currentTeacher = {
+        cost: Number.POSITIVE_INFINITY
+    }
+
+    this.population.forEach(element => {
+        if (element.cost < this.currentTeacher.cost) {
+            this.currentTeacher = element;
+        }
+    });
+};
+
+this.teachLearners = function() {
     // initiate
     let sumX = 0;
     let sumY = 0;
-    let teacher = {
+
+    this.population.forEach(element => {
+        sumX += element.position.x;
+        sumY += element.position.y;
+    });
+
+    let meanX = sumX / this.population.length;
+    let meanY = sumY / this.population.length;
+
+    // teacher
+    this.population.forEach(element => {
+        let teachingFactor = Math.floor(Math.random() * 2 + 1);
+        let newX = element.position.x + Math.random() * this.currentTeacher.position.x - teachingFactor * meanX;
+        let newY = element.position.y + Math.random() * this.currentTeacher.position.y - teachingFactor * meanY;
+
+        this.evaluate(element, newX, newY);
+    });
+};
+
+this.teacher = function() {
+    // initiate
+    let sumX = 0;
+    let sumY = 0;
+    this.currentTeacher = {
         cost: Number.POSITIVE_INFINITY
     };
     this.population.forEach(element => {
         sumX += element.position.x;
         sumY += element.position.y;
 
-        if (element.cost < teacher.cost) {
-            teacher = element;
+        if (element.cost < this.currentTeacher.cost) {
+            this.currentTeacher = element;
         }
     });
     let meanX = sumX / this.population.length;
@@ -89,13 +130,14 @@ this.TLBO = function() {
     // teacher
     this.population.forEach(element => {
         let teachingFactor = Math.floor(Math.random() * 2 + 1);
-        let newX = element.position.x + Math.random() * teacher.position.x - teachingFactor * meanX;
-        let newY = element.position.y + Math.random() * teacher.position.y - teachingFactor * meanY;
-        
+        let newX = element.position.x + Math.random() * this.currentTeacher.position.x - teachingFactor * meanX;
+        let newY = element.position.y + Math.random() * this.currentTeacher.position.y - teachingFactor * meanY;
+
         this.evaluate(element, newX, newY);
     });
+};
 
-    // student
+this.student = function() {
     for (let k = 0; k < this.population.length; k++) {
         let element = this.population[k];
 
@@ -107,7 +149,7 @@ this.TLBO = function() {
 
         let stepX = element.position.x - student.position.x;
         let stepY = element.position.y - student.position.y;
-        
+
         if (student.cost < element.cost) {
             stepX = -stepX;
             stepY = -stepY;
@@ -115,7 +157,7 @@ this.TLBO = function() {
 
         let newX = element.position.x + Math.random() * stepX;
         let newY = element.position.y + Math.random() * stepY;
-        
+
         this.evaluate(element, newX, newY);
     };
 };
@@ -145,17 +187,41 @@ this.main = function() {
     this.drawPopulation();
 };
 
+this.drawTLBO = function() {
+  this.canvas.clearRect(0, 0, 1024, 1024);
+  this.drawCostFunction();
+  this.drawPopulation();
+  this.drawIndividual(this.currentTeacher.position.x, this.currentTeacher.position.y, 'green');
+}
+
 this.incrementStep = function() {
     this.TLBO();
-    this.canvas.clearRect(0, 0, 1024, 1024);
-    this.drawCostFunction();
-    this.drawPopulation();
+    this.drawTLBO();
+};
+
+this.performAppointment = function() {
+  this.appointTeacher();
+  this.drawTLBO();
+};
+
+this.performTeaching = function() {
+  this.teachLearners();
+  this.drawTLBO();
+};
+
+this.performLearning = function() {
+  this.student();
+  this.drawTLBO();
+}
+
+this.drawIndividual = function(x, y, color) {
+    this.canvas.fillStyle = color;
+    this.canvas.fillRect((x + (this.nMax - this.nMin) / 2) * 100 - 2, (y + (this.nMax - this.nMin) / 2) * 100 - 2, 4, 4);
 };
 
 this.drawPopulation = function() {
     this.population.forEach(element => {
-        this.canvas.fillStyle = 'purple';
-        this.canvas.fillRect((element.position.x + (this.nMax - this.nMin) / 2) * 100, (element.position.y + (this.nMax - this.nMin) / 2) * 100, 5, 5);
+        this.drawIndividual(element.position.x, element.position.y, 'purple');
     });
 };
 
