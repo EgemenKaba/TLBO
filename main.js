@@ -18,18 +18,18 @@ this.cost = function(x) {
     return this.rastrigin(x);
 };
 
-this.nPopulation = 100;
-this.nGenerations = 10;
-this.nDesignVariables = 2;
-this.nMin = -5.12;
-this.nMax = 5.12;
-this.population = [];
-this.currentTeacher = {};
-this.bestSolution = {
-    cost: Number.POSITIVE_INFINITY
-};
-
 this.init = function() {
+    this.nPopulation = 100;
+    this.nGenerations = 10;
+    this.nDesignVariables = 2;
+    this.nMin = -5.12;
+    this.nMax = 5.12;
+    this.population = [];
+    this.currentTeacher = {};
+    this.bestSolution = {
+        cost: Number.POSITIVE_INFINITY
+    };
+
     for (let i = 0; i < nPopulation; i++) {
         let rndX = Math.random() * (nMax - nMin) + nMin;
         let rndY = Math.random() * (nMax - nMin) + nMin;
